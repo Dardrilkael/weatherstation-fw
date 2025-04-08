@@ -1,12 +1,9 @@
-// Título: Integração WIFI
-// Data: 08/04/2025
+// Título: Integração HTTP & MQTT
+// Data: 30/07/2023
 #pragma once
 #include "pch.h"
-#include <WiFi.h>              // Para conexão WiFi
 
-// ----------- VARIÁVEIS GLOBAIS -----------
-WiFiClient wifiClient;
-// WiFiClientSecure secureWifiClient; // Ative se precisar de HTTPS com certificados
+
 
 // ----------- FUNÇÕES -----------
 
@@ -18,30 +15,17 @@ WiFiClient wifiClient;
  * @param password Senha da rede WiFi
  * @return int 0 se conectado com sucesso
  */
-int setupWifi(const char* contextName, const char* ssid, const char* password)
-{
-  OnDebug(Serial.printf("%s: Estabelecendo conexão WiFi...\n", contextName);)
+int setupWifi(const char* contextName, const char* ssid, const char* password);
 
-  WiFi.mode(WIFI_STA);               // Modo estação (cliente)
-  WiFi.begin(ssid, password);        // Conecta à rede
-  WiFi.setAutoReconnect(true);       // Reconnect automático
-  WiFi.persistent(true);             // Salva rede nos registros
+namespace NTP{
+/**
+ * Inicializa o cliente NTP para sincronização de horário.
+ */
+void setupTime();
 
-  // secureWifiClient.setCACert(root_ca); // Descomente se for usar HTTPS com certificado
+// 📌 2. Retorna o horário formatado como string "dd/mm/yyyy HH:MM:SS"
+String getFormattedTime();
 
-  // Aguarda conexão
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-    delay(500);
-    OnDebug(Serial.print(".");)
-    attempts++;
-  }
-
-  if (WiFi.status() == WL_CONNECTED) {
-    OnDebug(Serial.printf("\n%s: Conectado com sucesso. IP: %s\n", contextName, WiFi.localIP().toString().c_str());)
-    return 0;
-  } else {
-    OnDebug(Serial.printf("\n%s: Falha na conexão WiFi.\n", contextName);)
-    return -1;
-  }
+// 📌 3. Retorna o timestamp atual (epoch time)
+time_t getTimestamp();
 }
