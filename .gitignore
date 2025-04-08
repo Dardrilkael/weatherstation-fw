@@ -1,0 +1,15 @@
+*.bin
+*.elf
+*.hex
+*.pyc
+*.DS_Store
+build/
+.pio/
+.vscode/
+*.d
+*.o
+*.a
+*.out
+*.map
+.idea/
+*.log
