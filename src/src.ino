@@ -5,8 +5,9 @@
 #include "SdManager.h"
 #include "constants.h"
 #include "Mqtt.h"
-#define FIRMWARE_VERSION "4.0.0"
-
+#include <ArduinoJson.h>
+#define FIRMWARE_VERSION "4.0.2"
+bool startUpdate(const String& url);
 MQTT mqtt;
 SdManager sd;
 void printConfig(const Config& config) {
@@ -34,14 +35,63 @@ void printConfig(const Config& config) {
   Logln(F("    ------------------------------------\n"));
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  Logf("[MQTT] Mensagem recebida em %s: ", topic);
+void mqttSubCallback(char* topic, unsigned char* payload, unsigned int length) {
+    Logln("📩 Execução de comando via MQTT");
 
-  String message;
-  for (unsigned int i = 0; i < length; i++) {
-    message += (char)payload[i];
-  }
-  Log(message);
+    char* jsonBuffer = new char[length + 1];
+    memcpy(jsonBuffer, (char*)payload, length);
+    jsonBuffer[length] = '\0';
+
+    Logf("🔧 Payload bruto: %s\n", jsonBuffer);
+    Logf("📡 Tópico: %s\n", topic);
+
+    DynamicJsonDocument doc(length + 1);
+    DeserializationError error = deserializeJson(doc, jsonBuffer);
+    delete[] jsonBuffer;
+
+    if (error) {
+        Logf("❌ Erro ao deserializar JSON: %s\n", error.c_str());
+        return;
+    }
+
+    JsonObject docData = doc.as<JsonObject>(); 
+    if (doc.containsKey("data")) {
+        docData = doc["data"].as<JsonObject>(); 
+    }
+
+    //serializeJson(docData, Serial);  // Para debug visual total
+
+    if (docData.containsKey("cmd")) {
+        const char* cmd = docData["cmd"];
+        
+        if (strcmp(cmd, "update") == 0) {
+            const char* url = docData["url"];
+            const char* id = docData["id"];
+            if (!id || !url) {
+                Logln("⚠️ Comando de update malformado (faltando 'id' ou 'url')");
+                return;
+            }
+
+            Logf("🛰️  URL para OTA: %s\n", url);
+
+            // Reportar início
+            const size_t capacity = 100;
+            char jsonString[capacity];
+            snprintf(jsonString, sizeof(jsonString), "{\"id\":\"%s\",\"status\":1}", id);
+            //mqtt.publish((sysReportMqqtTopic + String("/OTA")).c_str(), jsonString);
+
+            // Chamar função de update
+            if (startUpdate(url)) {
+                Logln("✅ Atualização concluída com sucesso. Reiniciando...");
+                delay(1000);
+                ESP.restart();
+            } else {
+                Logln("❌ Falha na atualização OTA.");
+                snprintf(jsonString, sizeof(jsonString), "{\"id\":\"%s\",\"status\":0}", id);
+                //mqtt.publish((sysReportMqqtTopic + String("/OTA")).c_str(), jsonString);
+            }
+        }
+    }
 }
 
 void setup() {
@@ -69,7 +119,7 @@ void setup() {
   sd.storeMeasurement("/data", "log", payloadLine.c_str());
 
   mqtt.setup(config.station_name, config.mqtt_server, config.mqtt_port, config.mqtt_username, config.mqtt_password);
-  mqtt.setCallback(callback);
+  mqtt.setCallback(mqttSubCallback);
   if (mqtt.connect()) {
     mqtt.subscribe(config.mqtt_topic);
   } else {
