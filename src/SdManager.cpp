@@ -12,44 +12,44 @@ bool SdManager::begin() {
     int attempts = 0;
 
     while (!SD.begin(SD_CS_PIN, SPI)) {
-        Serial.printf("[SD] Cartão não encontrado. Tentando novamente em %d segundos...\n", RETRY_INTERVAL / 1000);
+        Logf("[SD] Cartão não encontrado. Tentando novamente em %d segundos...\n", RETRY_INTERVAL / 1000);
         delay(RETRY_INTERVAL);
         if (++attempts > 5) {
-            Log("[SD] Falha após várias tentativas.");
+            Log("[SD] Falha após várias tentativas.\n");
             return false;
         }
     }
 
-    Log("[SD] Cartão iniciado com sucesso.");
+    Log("[SD] Cartão iniciado com sucesso.\n");
     return true;
 }
 
 bool SdManager::createDirectory(const char* directory) {
-    Serial.printf("[SD] Verificando/criando diretório: %s\n", directory);
+    Logf("[SD] Verificando/criando diretório: %s\n", directory);
     if (!SD.exists(directory)) {
         if (SD.mkdir(directory)) {
-            Log("[SD] Diretório criado com sucesso.");
+            Log("[SD] Diretório criado com sucesso.\n");
             return true;
         } else {
-            Log("[SD] Falha ao criar diretório.");
+            Log("[SD] Falha ao criar diretório.\n");
             return false;
         }
     }
-    Log("[SD] Diretório já existe.");
+    Log("[SD] Diretório já existe.\n");
     return true;
 }
 
 bool SdManager::appendToFile(const char* path, const char* message) {
     File file = SD.open(path, FILE_APPEND);
     if (!file) {
-        Log("[SD] Falha ao abrir arquivo para escrita.");
+        Log("[SD] Falha ao abrir arquivo para escrita.\n");
         return false;
     }
 
     if (file.print(message)) {
-        Log("[SD] Dados gravados com sucesso.");
+        Log("[SD] Dados gravados com sucesso.\n");
     } else {
-        Log("[SD] Falha ao gravar dados.");
+        Log("[SD] Falha ao gravar dados.\n");
         file.close();
         return false;
     }
@@ -68,7 +68,7 @@ bool SdManager::storeMeasurement(const char* directory, const char* fileName, co
         // File doesn't exist, write header first
         const char* header = "timestamp,value\n"; // Customize this based on your data format
         if (!appendToFile(fullPath.c_str(), header)) {
-            OnDebug(Log("⚠️ Falha ao escrever o cabeçalho do arquivo."));
+            Log("⚠️ Falha ao escrever o cabeçalho do arquivo.\n");
             return false;
         }
     }
@@ -79,7 +79,7 @@ bool SdManager::storeMeasurement(const char* directory, const char* fileName, co
 bool SdManager::loadConfiguration(const char* path, Config &config, std::string& configJson) {
   File file = SD.open(path);
   if (!file) {
-    Serial.println("❌ Erro ao abrir arquivo de configuração.");
+    Log("❌ Erro ao abrir arquivo de configuração.");
     return false;
   }
 
@@ -88,8 +88,7 @@ bool SdManager::loadConfiguration(const char* path, Config &config, std::string&
   file.close();
 
   if (error) {
-    Serial.print("❌ Erro ao fazer parsing do JSON: ");
-    Serial.println(error.c_str());
+    Logf("❌ Erro ao fazer parsing do JSON: %s",error.c_str());
     return false;
   }
 

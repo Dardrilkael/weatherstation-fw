@@ -19,8 +19,8 @@
  * @brief Log simples (sem contexto).
  * Aceita qualquer expressão compatível com Serial.println().
  */
-#define Log(msg) OnDebug(Serial.println(msg))
-
+#define Log(msg) OnDebug(Serial.print(msg))
+#define Logln(msg) OnDebug(Serial.println(msg))
 /**
  * @brief Log com contexto nomeado (ex: função, módulo).
  * Usa printf-style com dois argumentos: contexto e mensagem.

@@ -1,5 +1,5 @@
 #include "mqtt.h"
-
+#include "Log.h"
 MQTT::MQTT() : client(wifiClient) {}
 
 MQTT::~MQTT() {}
@@ -16,15 +16,14 @@ bool MQTT::setup(const char* clientId, const char* server, int port,
 
 bool MQTT::connect() {
     if (!client.connected()) {
-        Serial.print("[MQTT] Conectando como: ");
-        Serial.println(mqttClientId);
+        Logf("[MQTT] Conectando como: %s\n",mqttClientId);
         
         if (client.connect(mqttClientId, mqttUsername, mqttPassword)) {
-            Serial.println("[MQTT] Conectado com sucesso!");
+            Logln("[MQTT] Conectado com sucesso!");
             return true;
         } else {
-            Serial.print("[MQTT] Falha: ");
-            Serial.println(client.state());
+            Log("[MQTT] Falha: ");
+            Logln(client.state());
             return false;
         }
     }

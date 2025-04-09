@@ -22,7 +22,7 @@ const char* ntpServer = "br.pool.ntp.org"; // Servidor NTP
  */
 int setupWifi(const char* contextName, const char* ssid, const char* password)
 {
-  LogContext(contextName,"Estabelecendo conexão WiFi...\n");
+  LogContext(contextName,"Estabelecendo conexão WiFi...");
 
   WiFi.mode(WIFI_STA);               // Modo estação (cliente)
   WiFi.begin(ssid, password);        // Conecta à rede
@@ -35,15 +35,15 @@ int setupWifi(const char* contextName, const char* ssid, const char* password)
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 20) {
     delay(500);
-    OnDebug(Serial.print(".");)
+    Logf(".");
     attempts++;
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    OnDebug(Serial.printf("\n%s: Conectado com sucesso. IP: %s\n", contextName, WiFi.localIP().toString().c_str());)
+   Logf("\n%s: Conectado com sucesso. IP: %s\n", contextName, WiFi.localIP().toString().c_str());
     return 0;
   } else {
-    OnDebug(Serial.printf("\n%s: Falha na conexão WiFi.\n", contextName);)
+    Logf("\n%s: Falha na conexão WiFi.\n", contextName);
     return -1;
   }
 }
@@ -57,7 +57,7 @@ namespace NTP{
 void setupTime() {
   sntp_set_sync_interval(600000); // sincroniza a cada 10 minutos
   configTime(0, 0, ntpServer); // offset UTC e DST (pode ajustar depois)
-  Serial.println("⏱️  Sincronização de tempo NTP iniciada.");
+  Log("⏱️  Sincronização de tempo NTP iniciada.\n");
 }
 
 // 📌 2. Retorna o horário formatado como string "dd/mm/yyyy HH:MM:SS"
