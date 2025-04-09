@@ -102,7 +102,8 @@ bool SdManager::loadConfiguration(const char* path, Config &config, std::string&
 
   // MQTT
   const char* mqtt_raw = doc["MQTT_HOST"] | "";
-  sscanf(mqtt_raw, "mqtt://%63[^:]:%63[^@]@%*[^:]:%d", config.mqtt_username, config.mqtt_password, &config.mqtt_port);
+  sscanf(mqtt_raw, "mqtt://%63[^:]:%63[^@]@%63[^:]:%d", config.mqtt_username, config.mqtt_password, config.mqtt_server, &config.mqtt_port);
+
 
   strlcpy(config.mqtt_topic, doc["MQTT_TOPIC"] | "", sizeof(config.mqtt_topic));
   config.interval = doc["INTERVAL"] | 15000;

@@ -4,8 +4,9 @@
 #include "network_integration.h"
 #include "SdManager.h"
 #include "constants.h"
+#include "Mqtt.h"
 
-
+MQTT mqtt;
 SdManager sd;
 void printConfig(const Config& config) {
   Serial.println(F("------ Configuração Atual ------"));
@@ -54,6 +55,15 @@ void setup() {
   String payloadLine = String(timestamp) + "_" + String(123);
   Log(payloadLine);
   sd.storeMeasurement("/data", "log", payloadLine.c_str());
+
+  mqtt.setup("Esp32145",config.mqtt_server,config.mqtt_port,config.mqtt_username,config.mqtt_password);
+  mqtt.setCallback(callback);
+  if (mqtt.connect()) {
+  mqtt.subscribe(config.mqtt_topic);
+} else {
+  Serial.println("MQTT connection failed.");
+}
+
 }
 
 void loop() {
@@ -66,6 +76,7 @@ void loop() {
       ESP.restart(); // Reinicia o ESP32
     }
   }
+  mqtt.loop();
   //Log(NTP::getFormattedTime());
   //Log(NTP::getTimestamp());
   delay(800);
