@@ -4,7 +4,7 @@
 #include <SPI.h>
 #include "constants.h"
 #include "log.h"
-
+#include <ArduinoJson.h>
 
 
 bool SdManager::begin() {
@@ -74,4 +74,38 @@ bool SdManager::storeMeasurement(const char* directory, const char* fileName, co
     }
 
     return appendToFile(fullPath.c_str(), payload);
+}
+
+bool SdManager::loadConfiguration(const char* path, Config &config, std::string& configJson) {
+  File file = SD.open(path);
+  if (!file) {
+    Serial.println("❌ Erro ao abrir arquivo de configuração.");
+    return false;
+  }
+
+  StaticJsonDocument<512> doc;
+  DeserializationError error = deserializeJson(doc, file);
+  file.close();
+
+  if (error) {
+    Serial.print("❌ Erro ao fazer parsing do JSON: ");
+    Serial.println(error.c_str());
+    return false;
+  }
+
+  strlcpy(config.station_uid,   doc["UID"] | "", sizeof(config.station_uid));
+  strlcpy(config.station_name,  doc["SLUG"] | "", sizeof(config.station_name));
+
+  // Wi-Fi
+  const char* wifi_raw = doc["WIFI"] | "";
+  sscanf(wifi_raw, "%63[^:]:%63s", config.wifi_ssid, config.wifi_password);
+
+  // MQTT
+  const char* mqtt_raw = doc["MQTT_HOST"] | "";
+  sscanf(mqtt_raw, "mqtt://%63[^:]:%63[^@]@%*[^:]:%d", config.mqtt_username, config.mqtt_password, &config.mqtt_port);
+
+  strlcpy(config.mqtt_topic, doc["MQTT_TOPIC"] | "", sizeof(config.mqtt_topic));
+  config.interval = doc["INTERVAL"] | 15000;
+  serializeJson(doc, configJson);
+  return true;
 }
