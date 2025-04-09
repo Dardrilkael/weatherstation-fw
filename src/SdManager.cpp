@@ -66,7 +66,7 @@ bool SdManager::storeMeasurement(const char* directory, const char* fileName, co
     // Check if file exists before writing
     if (!SD.exists(fullPath)) {
         // File doesn't exist, write header first
-        const char* header = "timestamp,value"; // Customize this based on your data format
+        const char* header = "timestamp,value\n"; // Customize this based on your data format
         if (!appendToFile(fullPath.c_str(), header)) {
             OnDebug(Log("⚠️ Falha ao escrever o cabeçalho do arquivo."));
             return false;
