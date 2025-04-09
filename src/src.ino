@@ -5,54 +5,57 @@
 #include "SdManager.h"
 #include "constants.h"
 #include "Mqtt.h"
-
+#define FIRMWARE_VERSION "4.0.0"
 
 MQTT mqtt;
 SdManager sd;
 void printConfig(const Config& config) {
-  Serial.println(F("------ Configuração Atual ------"));
-  Serial.print(F("UID: "));
-  Serial.println(config.station_uid);
-  Serial.print(F("Nome da Estação: "));
-  Serial.println(config.station_name);
-  Serial.print(F("WiFi SSID: "));
-  Serial.println(config.wifi_ssid);
-  Serial.print(F("WiFi Password: "));
-  Serial.println(config.wifi_password);
-  Serial.print(F("MQTT Server: "));
-  Serial.println(config.mqtt_server);
-  Serial.print(F("MQTT Username: "));
-  Serial.println(config.mqtt_username);
-  Serial.print(F("MQTT Password: "));
-  Serial.println(config.mqtt_password);
-  Serial.print(F("MQTT Topic: "));
-  Serial.println(config.mqtt_topic);
-  Serial.print(F("MQTT Port: "));
-  Serial.println(config.mqtt_port);
-  Serial.print(F("Intervalo (ms): "));
-  Serial.println(config.interval);
-  Serial.println(F("--------------------------------"));
+  Logln(F("   -------- Configuração Atual --------"));
+  Log(F("\t|UID:             "));
+  Logln(config.station_uid);
+  Log(F("\t|Nome da Estação: "));
+  Logln(config.station_name);
+  Log(F("\t|WiFi SSID:       "));
+  Logln(config.wifi_ssid);
+  Log(F("\t|WiFi Password:   "));
+  Logln(config.wifi_password);
+  Log(F("\t|MQTT Server:     "));
+  Logln(config.mqtt_server);
+  Log(F("\t|MQTT Username:   "));
+  Logln(config.mqtt_username);
+  Log(F("\t|MQTT Password:   "));
+  Logln(config.mqtt_password);
+  Log(F("\t|MQTT Topic:      "));
+  Logln(config.mqtt_topic);
+  Log(F("\t|MQTT Port:       "));
+  Logln(config.mqtt_port);
+  Log(F("\t|Intervalo (ms):  "));
+  Logln(config.interval);
+  Logln(F("    ------------------------------------\n"));
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Logf("[MQTT] Mensagem recebida em %s: ", topic);
+
+  String message;
   for (unsigned int i = 0; i < length; i++) {
-    Log((char)payload[i]);
+    message += (char)payload[i];
   }
-  Logln();
+  Log(message);
 }
 
 void setup() {
   Serial.begin(115200);
-  delay(2000);
-  Log("Inicializando");
+  delay(2500);
+  Logf("🚀 Iniciando dispositivo... 🛠 Firmware v%s\n\n", FIRMWARE_VERSION);
+  delay(1000);
 
   while (!sd.begin()) {
     Log("[ERRO] Não foi possível iniciar o cartão SD.\n");
   }
   std::string configJson;
   sd.loadConfiguration("/config.txt", config, configJson);
-  Log(configJson.c_str());
+  Logln(configJson.c_str());
   printConfig(config);
 
   setupWifi("WiFi", config.wifi_ssid, config.wifi_password);
@@ -70,7 +73,7 @@ void setup() {
   if (mqtt.connect()) {
     mqtt.subscribe(config.mqtt_topic);
   } else {
-    Serial.println("MQTT connection failed.");
+    Logln("MQTT connection failed.");
   }
 }
 
@@ -79,7 +82,7 @@ void loop() {
   if (Serial.available()) {
     char input = Serial.read();
     if (input == 'r' || input == 'R') {
-      Serial.println("🔄 Reiniciando dispositivo...");
+      Logln("🔄 Reiniciando dispositivo...");
       delay(1000);    // Só pra dar tempo de imprimir a mensagem
       ESP.restart();  // Reinicia o ESP32
     }
