@@ -1,7 +1,7 @@
 // Título: Integração HTTP & MQTT
 // Data: 30/07/2023
 #pragma once
-#include "pch.h"
+
 
 
 

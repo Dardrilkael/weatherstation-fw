@@ -2,7 +2,7 @@
 // Data: 30/07/2023
 #pragma once
 
-#include "pch.h"
+#include "log.h"
 #include <WiFi.h>              // Para conexão WiFi
 #include <time.h>
 #include "esp_sntp.h"
