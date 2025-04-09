@@ -7,6 +7,7 @@
 #include "Mqtt.h"
 #include <ArduinoJson.h>
 #define FIRMWARE_VERSION "4.0.2"
+std::vector<std::string> jsonLines;
 bool startUpdate(const String& url);
 
 // 📦 Estrutura da tarefa
@@ -25,7 +26,7 @@ bool shouldRun(PeriodicTask& task, unsigned long now) {
 }
 
 // 🕒 Tarefas periódicas
-PeriodicTask taskSensor = {5000, 0};     // A cada 5 segundos
+PeriodicTask taskSensor;     // A cada 5 segundos
 PeriodicTask taskHeartbeat = {10000, 0}; // A cada 10 segundos
 MQTT mqtt;
 SdManager sd;
@@ -136,7 +137,7 @@ void setup() {
   String payloadLine = String(timestamp) + "_" + String(123);
   Logln(payloadLine);
   sd.storeMeasurement("/data", "log", payloadLine.c_str());
-
+    
   mqtt.setup(config.station_name, config.mqtt_server, config.mqtt_port, config.mqtt_username, config.mqtt_password);
   mqtt.setCallback(mqttSubCallback);
   if (mqtt.connect()) {
@@ -144,6 +145,7 @@ void setup() {
   } else {
     Logln("MQTT connection failed.");
   }
+  taskSensor = {config.interval, 0};
 }
 
 
@@ -161,7 +163,7 @@ void loop() {
       ESP.restart();  // Reinicia o ESP32
     }
   }
-  
+
   if (shouldRun(taskSensor, now)) {
     Logln("📡 Lendo sensor...");
     // Aqui você colocaria leitura de sensor, envio de dados, etc.

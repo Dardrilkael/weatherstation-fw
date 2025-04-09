@@ -5,7 +5,7 @@
 #include "constants.h"
 #include "log.h"
 #include <ArduinoJson.h>
-
+#include <sstream>
 
 bool SdManager::begin() {
     SPI.begin(SD_CLK_PIN, SD_MISO_PIN, SD_MOSI_PIN);
@@ -109,3 +109,74 @@ bool SdManager::loadConfiguration(const char* path, Config &config, std::string&
   serializeJson(doc, configJson);
   return true;
 }
+/*
+bool SdManager::csvToJsonLines(const char* path, std::vector<std::string>& jsonLines, size_t maxLines) {
+    File file = SD.open(path, FILE_READ);
+    if (!file) {
+        Log("[SD] Falha ao abrir arquivo para leitura.\n");
+        return false;
+    }
+
+    // Lê o cabeçalho
+    String headerLine = file.readStringUntil('\n');
+    headerLine.trim();
+    if (headerLine.length() == 0) {
+        Log("[SD] Arquivo sem cabeçalho.\n");
+        file.close();
+        return false;
+    }
+
+    // Separa as chaves (colunas)
+    std::vector<String> keys;
+    int start = 0;
+    while (true) {
+        int idx = headerLine.indexOf(',', start);
+        if (idx == -1) {
+            keys.push_back(headerLine.substring(start));
+            break;
+        }
+        keys.push_back(headerLine.substring(start, idx));
+        start = idx + 1;
+    }
+
+    // Lê e converte as linhas
+    size_t count = 0;
+    while (file.available() && count < maxLines) {
+        String line = file.readStringUntil('\n');
+        line.trim();
+        if (line.length() == 0) continue;
+
+        std::stringstream jsonStream;
+        jsonStream << "{";
+
+        int start = 0;
+        size_t keyIndex = 0;
+        while (keyIndex < keys.size()) {
+            int idx = line.indexOf(',', start);
+            String value;
+            if (idx == -1) {
+                value = line.substring(start);
+            } else {
+                value = line.substring(start, idx);
+            }
+
+            value.trim();
+
+            jsonStream << "\"" << keys[keyIndex].c_str() << "\":" << value.c_str();
+
+            if (++keyIndex < keys.size()) {
+                jsonStream << ",";
+            }
+
+            if (idx == -1) break;
+            start = idx + 1;
+        }
+
+        jsonStream << "}";
+        jsonLines.push_back(jsonStream.str());
+        count++;
+    }
+
+    file.close();
+    return true;
+}*/
