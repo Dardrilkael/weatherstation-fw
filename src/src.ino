@@ -8,6 +8,25 @@
 #include <ArduinoJson.h>
 #define FIRMWARE_VERSION "4.0.2"
 bool startUpdate(const String& url);
+
+// 📦 Estrutura da tarefa
+struct PeriodicTask {
+  unsigned long interval;
+  unsigned long lastRun;
+};
+
+// 🧠 Função auxiliar para verificar se a tarefa deve rodar
+bool shouldRun(PeriodicTask& task, unsigned long now) {
+  if (now - task.lastRun >= task.interval) {
+    task.lastRun = now;
+    return true;
+  }
+  return false;
+}
+
+// 🕒 Tarefas periódicas
+PeriodicTask taskSensor = {5000, 0};     // A cada 5 segundos
+PeriodicTask taskHeartbeat = {10000, 0}; // A cada 10 segundos
 MQTT mqtt;
 SdManager sd;
 void printConfig(const Config& config) {
@@ -127,7 +146,12 @@ void setup() {
   }
 }
 
+
+
+
+
 void loop() {
+  unsigned long now = millis();
   // Main loop code
   if (Serial.available()) {
     char input = Serial.read();
@@ -137,6 +161,17 @@ void loop() {
       ESP.restart();  // Reinicia o ESP32
     }
   }
+  
+  if (shouldRun(taskSensor, now)) {
+    Logln("📡 Lendo sensor...");
+    // Aqui você colocaria leitura de sensor, envio de dados, etc.
+  }
+
+  if (shouldRun(taskHeartbeat, now)) {
+    Logln("💓 Enviando heartbeat...");
+    // Algo como um "ping" pra mostrar que o dispositivo está vivo
+  }
+
   mqtt.loop();
   //Log(NTP::getFormattedTime());
   //Log(NTP::getTimestamp());
